@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+
+    wordpress:
+        container_name: web-live
+        depends_on:
+            - mysqldb
+        image: wordpress:latest
+        ports:
+            - "8001:80"
+        restart: always
+        volumes:
+            - ./public-html:/var/www/html
+
+        environment:
+            - WORDPRESS_DB_HOST= ${WORDPRESS_DB_HOST}
+            - WORDPRESS_DB_USER= ${WORDPRESS_DB_USER}
+            - WORDPRESS_DB_PASSWORD= ${WORDPRESS_DB_PASSWORD}
+            - WORDPRESS_DB_NAME= ${WORDPRESS_DB_NAME}
+        networks:
+            - app-live
+
+
+    pma:
+        image: phpmyadmin/phpmyadmin
+        container_name: pma-live
+        ports:
+            - "8080:80"
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=${MYSQL_HOST}
+            - UPLOAD_LIMIT=100M
+        restart: always
+        depends_on:
+            - mysqldb
+        networks:
+            - app-live
+
+    mysqldb:
+        image: mariadb:latest
+        container_name: ${MYSQL_HOST}
+        restart: always
+        env_file:
+            - .env
+        environment:
+            - MYSQL_DATABASE=${MYSQL_DATABASE}
+            - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+            - MYSQL_USER=${MYSQL_USER}
+            - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        volumes:
+            - ./data/db/mariadb:/var/lib/mysql
+        networks:
+            - app-live
+
+networks:
+    app-live:
+        driver: bridge
+
+volumes:
+    public-html: {}
+
+  
